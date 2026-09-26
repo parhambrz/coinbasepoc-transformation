@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+logs/
+target/
+dbt_packages/
+profiles/profiles.yml
+*.p8
+.secrets.act
+.DS_Store
