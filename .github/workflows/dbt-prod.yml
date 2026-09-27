@@ -1,0 +1,45 @@
+name: dbt-prod
+on:
+  push:
+    branches: [master]
+permissions:
+  contents: read
+concurrency:
+  group: dbt-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DBT_PROFILES_DIR: profiles
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_ROLE_PROD: ${{ secrets.SNOWFLAKE_ROLE_PROD }}
+      SNOWFLAKE_DATABASE_PROD: COINBASEPOC_PROD
+      SNOWFLAKE_WAREHOUSE_PROD: ${{ secrets.SNOWFLAKE_WAREHOUSE_PROD }}
+      SNOWFLAKE_SCHEMA_PROD: DBT
+      COINBASE_RAW_DATABASE: ${{ vars.COINBASE_RAW_DATABASE || 'COINBASEPOC' }}
+      COINBASE_RAW_SCHEMA: ${{ vars.COINBASE_RAW_SCHEMA || 'INGEST' }}
+      COINBASE_RAW_TABLE: ${{ vars.COINBASE_RAW_TABLE || 'RAW_STREAM' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dbt
+        run: python -m pip install "dbt-core==1.11.12" "dbt-snowflake==1.11.6"
+      - name: Write Snowflake private key
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.snowflake"
+          printf '%s\n' "$SNOWFLAKE_PRIVATE_KEY" > "$HOME/.snowflake/rsa_key.p8"
+          chmod 600 "$HOME/.snowflake/rsa_key.p8"
+          echo "SNOWFLAKE_PRIVATE_KEY_PATH=$HOME/.snowflake/rsa_key.p8" >> "$GITHUB_ENV"
+        env:
+          SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+      - run: cp profiles/profiles.template.yml profiles/profiles.yml
+      - run: dbt deps --target prod --profiles-dir profiles
+      - run: dbt debug --target prod --profiles-dir profiles
+      - run: dbt build --target prod --profiles-dir profiles
