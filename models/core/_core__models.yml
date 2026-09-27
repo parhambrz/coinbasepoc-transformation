@@ -1,0 +1,19 @@
+version: 2
+models:
+  - name: market_ticks
+    description: Canonical deduplicated market tick fact, with measurements, forecast context, and ingestion lineage.
+    columns:
+      - name: snapshot_id
+        data_tests: [not_null, unique]
+      - name: tick_ts
+        data_tests: [not_null]
+      - name: product_id
+        data_tests: [not_null]
+      - name: bid_price
+        data_tests: [not_null]
+      - name: ask_price
+        data_tests: [not_null]
+      - name: mid_price
+        data_tests: [not_null]
+      - name: spread
+        data_tests: [not_null]
