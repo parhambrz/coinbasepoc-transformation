@@ -1,0 +1,42 @@
+coinbase_market_data:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH') }}"
+      private_key_passphrase: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PASSPHRASE', '') }}"
+      role: "{{ env_var('SNOWFLAKE_ROLE_DEV', 'ROLE_COINBASEPOC_DEV_PBARAZESH') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE_DEV', 'COINBASEPOC_DEV') }}"
+      warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE_DEV', 'WH_COINBASEPOC_DEV') }}"
+      schema: "{{ env_var('SNOWFLAKE_SCHEMA_DEV', 'DBT_PBARAZESH') }}"
+      threads: 2
+      client_session_keep_alive: false
+      query_tag: "coinbase_dbt_dev_{{ env_var('SNOWFLAKE_SCHEMA_DEV', 'DBT_PBARAZESH') }}"
+    ci:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH') }}"
+      private_key_passphrase: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PASSPHRASE', '') }}"
+      role: "{{ env_var('SNOWFLAKE_ROLE_CI', 'ROLE_COINBASEPOC_CI') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE_CI', 'COINBASEPOC_CI') }}"
+      warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE_CI', 'WH_COINBASEPOC_CI') }}"
+      schema: "{{ env_var('SNOWFLAKE_SCHEMA_CI', 'PR_LOCAL') }}"
+      threads: 2
+      client_session_keep_alive: false
+      query_tag: "coinbase_dbt_ci_{{ env_var('SNOWFLAKE_SCHEMA_CI', 'PR_LOCAL') }}"
+    prod:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH') }}"
+      private_key_passphrase: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PASSPHRASE', '') }}"
+      role: "{{ env_var('SNOWFLAKE_ROLE_PROD', 'ROLE_COINBASEPOC_PROD') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE_PROD', 'COINBASEPOC_PROD') }}"
+      warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE_PROD', 'WH_COINBASEPOC_PROD') }}"
+      schema: "{{ env_var('SNOWFLAKE_SCHEMA_PROD', 'DBT') }}"
+      threads: 2
+      client_session_keep_alive: false
+      query_tag: coinbase_dbt_prod
