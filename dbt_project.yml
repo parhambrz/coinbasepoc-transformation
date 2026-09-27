@@ -1,0 +1,39 @@
+name: coinbase_market_data
+version: 1.0.0
+config-version: 2
+profile: coinbase_market_data
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+analysis-paths: ["analyses"]
+docs-paths: ["docs"]
+seed-paths: ["seeds"]
+snapshot-paths: ["snapshots"]
+
+target-path: target
+clean-targets: [target, dbt_packages]
+
+models:
+  coinbase_market_data:
+    staging:
+      +schema: STAGING
+      +materialized: view
+    intermediate:
+      +schema: INTERMEDIATE
+      +materialized: view
+    core:
+      +schema: CORE
+      +materialized: dynamic_table
+      +target_lag: 5 minutes
+      +refresh_mode: AUTO
+      +snowflake_warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE_' ~ target.name | upper) }}"
+    marts:
+      +schema: MARTS
+      +materialized: dynamic_table
+      +target_lag: 5 minutes
+      +refresh_mode: AUTO
+      +snowflake_warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE_' ~ target.name | upper) }}"
+    serving:
+      +schema: SERVE
+      +materialized: view
