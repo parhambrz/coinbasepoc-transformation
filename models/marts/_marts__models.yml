@@ -1,0 +1,27 @@
+version: 2
+models:
+  - name: spread_stats_hourly
+    description: Hourly spread and mid-price statistics; quantity weighted mid-price is an explicitly labeled proxy.
+    columns:
+      - name: hour_ts
+        data_tests: [not_null]
+      - name: product_id
+        data_tests: [not_null]
+      - name: tick_count
+        data_tests: [not_null]
+  - name: forecast_accuracy
+    description: Forecasts matched only to a market tick at the exact target timestamp; unmatched forecasts remain visible with null actual and errors.
+    columns:
+      - name: forecast_snapshot_id
+        data_tests: [not_null, unique]
+      - name: forecast_issued_at
+        data_tests: [not_null]
+      - name: primary_absolute_error
+        description: Null until an actual snapshot at the forecast target time is available.
+  - name: feed_health_log
+    description: Hourly latency and non-healthy status diagnostics. Includes only hours with detected anomalies.
+    columns:
+      - name: hour_ts
+        data_tests: [not_null]
+      - name: product_id
+        data_tests: [not_null]
