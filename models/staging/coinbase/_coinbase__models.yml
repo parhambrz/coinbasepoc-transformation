@@ -1,0 +1,21 @@
+version: 2
+models:
+  - name: stg_coinbase__market_snapshots
+    description: Typed, one-row-per-source-snapshot representation retaining ingestion lineage.
+    columns:
+      - name: snapshot_id
+        description: Deterministic identifier derived from source file, event timestamp, and product.
+      - name: tick_ts
+        description: Parsed event timestamp.
+      - name: product_id
+        description: Market product identifier.
+      - name: bid_price
+        description: Safely parsed best bid price.
+      - name: ask_price
+        description: Safely parsed best ask price.
+      - name: spread
+        description: Safely parsed bid-ask spread.
+      - name: source_filename
+        description: Azure blob file providing this snapshot.
+      - name: loaded_at
+        description: Snowflake ingestion timestamp.

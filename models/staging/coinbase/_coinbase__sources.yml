@@ -1,0 +1,19 @@
+version: 2
+sources:
+  - name: coinbase_raw
+    description: Ingestion-owned raw snapshots from the Azure Blob to Snowflake pipeline. Enable change tracking on the source table if incremental Dynamic Table refresh requires it.
+    database: "{{ env_var('COINBASE_RAW_DATABASE', 'COINBASEPOC') }}"
+    schema: "{{ env_var('COINBASE_RAW_SCHEMA', 'INGEST') }}"
+    tables:
+      - name: raw_stream
+        identifier: "{{ env_var('COINBASE_RAW_TABLE', 'RAW_STREAM') }}"
+        description: One ingested JSON market snapshot per row, with the source blob name and Snowflake load timestamp.
+        config:
+          loaded_at_field: LOADED_AT
+        columns:
+          - name: RAW_DATA
+            description: Semi-structured Coinbase snapshot payload (VARIANT).
+          - name: FILENAME
+            description: Azure blob file containing the payload.
+          - name: LOADED_AT
+            description: Timestamp the payload entered the Snowflake ingestion layer.
