@@ -1,0 +1,10 @@
+{
+  "github.copilot.chat.commitMessageGeneration.instructions": [
+    {
+      "file": ".agents/skills/dbt-git-workflow/SKILL.md"
+    },
+    {
+      "text": "When generating a commit message, output a Conventional Commit subject line only. Use format: <type>(<scope>): <imperative summary>. Use lowercase type and scope, no trailing period, and keep it concise and specific."
+    }
+  ]
+}
