@@ -1,0 +1,16 @@
+version: 2
+models:
+  - name: market_quality_hourly
+    description: Consumer-facing hourly market quality view for dashboards and semantic layer development.
+    columns:
+      - name: hour_ts
+        data_tests: [not_null]
+      - name: product_id
+        data_tests: [not_null]
+  - name: forecast_performance_hourly
+    description: Hourly model versus naive forecast performance, with actual coverage shown explicitly.
+    columns:
+      - name: hour_ts
+        data_tests: [not_null]
+      - name: product_id
+        data_tests: [not_null]
