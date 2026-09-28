@@ -21,19 +21,19 @@ with forecasts as (
      and actual.tick_ts = f.forecast_target_ts
 )
 select
-    forecast_snapshot_id,
-    product_id,
-    forecast_issued_at,
-    forecast_target_ts,
-    actual_at,
-    forecast_model,
-    forecast_value,
-    forecast_naive_value,
-    actual_mid_price,
-    abs(forecast_value - actual_mid_price) as primary_absolute_error,
-    abs(forecast_naive_value - actual_mid_price) as naive_absolute_error,
-    iff(sign(forecast_value - mid_at_issue.mid_price) = sign(actual_mid_price - mid_at_issue.mid_price), true, false) as primary_directional_hit,
-    iff(sign(forecast_naive_value - mid_at_issue.mid_price) = sign(actual_mid_price - mid_at_issue.mid_price), true, false) as naive_directional_hit
+    matched.forecast_snapshot_id,
+    matched.product_id,
+    matched.forecast_issued_at,
+    matched.forecast_target_ts,
+    matched.actual_at,
+    matched.forecast_model,
+    matched.forecast_value,
+    matched.forecast_naive_value,
+    matched.actual_mid_price,
+    abs(matched.forecast_value - matched.actual_mid_price) as primary_absolute_error,
+    abs(matched.forecast_naive_value - matched.actual_mid_price) as naive_absolute_error,
+    iff(sign(matched.forecast_value - mid_at_issue.mid_price) = sign(matched.actual_mid_price - mid_at_issue.mid_price), true, false) as primary_directional_hit,
+    iff(sign(matched.forecast_naive_value - mid_at_issue.mid_price) = sign(matched.actual_mid_price - mid_at_issue.mid_price), true, false) as naive_directional_hit
 from matched
 left join {{ ref('market_ticks') }} mid_at_issue
   on mid_at_issue.product_id = matched.product_id
