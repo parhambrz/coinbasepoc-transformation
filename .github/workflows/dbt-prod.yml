@@ -40,6 +40,5 @@ jobs:
         env:
           SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
       - run: cp profiles/profiles.template.yml profiles/profiles.yml
-      - run: dbt deps --target prod --profiles-dir profiles
       - run: dbt debug --target prod --profiles-dir profiles
       - run: dbt build --target prod --profiles-dir profiles

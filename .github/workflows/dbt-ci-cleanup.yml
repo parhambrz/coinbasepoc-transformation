@@ -38,4 +38,6 @@ jobs:
         env:
           SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
       - run: cp profiles/profiles.template.yml profiles/profiles.yml
-      - run: dbt run-operation drop_ci_schemas --args '{confirm: true}' --target ci --profiles-dir profiles
+      - run: >-
+          dbt run-operation drop_ci_schemas --args '{confirm: true}'
+          --target ci --profiles-dir profiles

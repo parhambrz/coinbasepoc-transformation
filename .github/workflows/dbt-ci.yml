@@ -48,7 +48,6 @@ jobs:
           [[ "$SNOWFLAKE_SCHEMA_CI" =~ ^PR_[1-9][0-9]*$ ]]
           [[ -s "$SNOWFLAKE_PRIVATE_KEY_PATH" ]]
       - run: cp profiles/profiles.template.yml profiles/profiles.yml
-      - run: dbt deps --target ci --profiles-dir profiles
       - run: dbt debug --target ci --profiles-dir profiles
       - run: dbt parse --target ci --profiles-dir profiles
       - run: dbt build --target ci --profiles-dir profiles
