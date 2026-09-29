@@ -56,3 +56,5 @@ Choose the type according to the primary effect of the change. For a change span
 - Commit only when the user asks for a commit or the task explicitly includes committing. Do not push, merge, or publish unless separately requested.
 - Do not bundle unrelated local changes. If unrelated changes are present, leave them unstaged and mention them.
 - After committing, report the commit hash and summarize the files or behavior included.
+
+# TEST
