@@ -10,6 +10,10 @@ create role if not exists ROLE_COINBASEPOC_PROD;
 create role if not exists ROLE_COINBASEPOC_BI_READER;
 create role if not exists ROLE_COINBASEPOC_DEV_<DEVELOPER_ID>;
 grant role ROLE_COINBASEPOC_DEV to role ROLE_COINBASEPOC_DEV_<DEVELOPER_ID>;
+grant role ROLE_COINBASEPOC_DEV_<DEVELOPER_ID> to role SYSADMIN;
+grant role ROLE_COINBASEPOC_CI to role SYSADMIN;
+grant role ROLE_COINBASEPOC_PROD to role SYSADMIN;
+grant role ROLE_COINBASEPOC_BI_READER to role SYSADMIN;
 
 create warehouse if not exists WH_COINBASEPOC_DEV warehouse_size = XSMALL auto_suspend = 60 auto_resume = true initially_suspended = true;
 create warehouse if not exists WH_COINBASEPOC_CI warehouse_size = XSMALL auto_suspend = 60 auto_resume = true initially_suspended = true;
@@ -17,6 +21,7 @@ create warehouse if not exists WH_COINBASEPOC_PROD warehouse_size = XSMALL auto_
 grant usage on warehouse WH_COINBASEPOC_DEV to role ROLE_COINBASEPOC_DEV;
 grant usage on warehouse WH_COINBASEPOC_CI to role ROLE_COINBASEPOC_CI;
 grant usage on warehouse WH_COINBASEPOC_PROD to role ROLE_COINBASEPOC_PROD;
+grant usage on warehouse WH_COINBASEPOC_PROD to role ROLE_COINBASEPOC_BI_READER;
 
 create database if not exists COINBASEPOC_DEV;
 create database if not exists COINBASEPOC_CI;
@@ -73,14 +78,15 @@ grant usage on schema COINBASEPOC_PROD.MARTS to role ROLE_COINBASEPOC_BI_READER;
 grant usage on schema COINBASEPOC_PROD.SERVE to role ROLE_COINBASEPOC_BI_READER;
 grant select on all tables in schema COINBASEPOC_PROD.CORE to role ROLE_COINBASEPOC_BI_READER;
 grant select on all views in schema COINBASEPOC_PROD.CORE to role ROLE_COINBASEPOC_BI_READER;
+grant select on all dynamic tables in schema COINBASEPOC_PROD.CORE to role ROLE_COINBASEPOC_BI_READER;
 grant select on future tables in schema COINBASEPOC_PROD.CORE to role ROLE_COINBASEPOC_BI_READER;
 grant select on future views in schema COINBASEPOC_PROD.CORE to role ROLE_COINBASEPOC_BI_READER;
+grant select on future dynamic tables in schema COINBASEPOC_PROD.CORE to role ROLE_COINBASEPOC_BI_READER;
 grant select on all tables in schema COINBASEPOC_PROD.MARTS to role ROLE_COINBASEPOC_BI_READER;
 grant select on all views in schema COINBASEPOC_PROD.MARTS to role ROLE_COINBASEPOC_BI_READER;
+grant select on all dynamic tables in schema COINBASEPOC_PROD.MARTS to role ROLE_COINBASEPOC_BI_READER;
 grant select on future tables in schema COINBASEPOC_PROD.MARTS to role ROLE_COINBASEPOC_BI_READER;
 grant select on future views in schema COINBASEPOC_PROD.MARTS to role ROLE_COINBASEPOC_BI_READER;
+grant select on future dynamic tables in schema COINBASEPOC_PROD.MARTS to role ROLE_COINBASEPOC_BI_READER;
 grant select on all views in schema COINBASEPOC_PROD.SERVE to role ROLE_COINBASEPOC_BI_READER;
 grant select on future views in schema COINBASEPOC_PROD.SERVE to role ROLE_COINBASEPOC_BI_READER;
-
--- Grant ROLE_COINBASEPOC_DEV_<DEVELOPER_ID> to the named developer user using approved identity.
--- Configure RSA public keys on dedicated CI and prod service users out of band.
