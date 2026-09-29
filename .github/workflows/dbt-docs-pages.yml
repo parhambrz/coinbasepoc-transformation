@@ -1,0 +1,210 @@
+name: dbt-docs-pages
+
+on:
+  workflow_run:
+    workflows: [dbt-ci, dbt-prod]
+    types: [completed]
+  pull_request_target:
+    branches: [master]
+    types: [closed]
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+  pages: write
+  id-token: write
+  pull-requests: read
+
+concurrency:
+  group: dbt-docs-pages
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'pull_request_target' ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       ((github.event.workflow_run.name == 'dbt-ci' &&
+         github.event.workflow_run.event == 'pull_request' &&
+         github.event.workflow_run.head_repository != null &&
+         github.event.workflow_run.head_repository.full_name == github.repository) ||
+        (github.event.workflow_run.name == 'dbt-prod' &&
+         github.event.workflow_run.event == 'push' &&
+         github.event.workflow_run.head_branch == 'master')))
+    runs-on: ubuntu-latest
+    outputs:
+      site_path: ${{ steps.update.outputs.site_path }}
+
+    steps:
+      - name: Checkout trusted publisher
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Restore current Pages state
+        shell: bash
+        run: |
+          set -euo pipefail
+          site="$RUNNER_TEMP/dbt-docs-site"
+          mkdir -p "$site"
+
+          if git fetch origin gh-pages && git rev-parse --verify origin/gh-pages >/dev/null 2>&1; then
+            git archive origin/gh-pages | tar -x -C "$site"
+          fi
+
+          echo "DBT_DOCS_SITE=$site" >> "$GITHUB_ENV"
+
+      - name: Update documentation site
+        id: update
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+          WORKFLOW_RUN_ID: ${{ github.event.workflow_run.id }}
+          CLOSED_PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          copy_docs() {
+            local source_directory="$1"
+            local destination_directory="$2"
+            local required_file
+            local optional_file
+
+            for required_file in index.html manifest.json catalog.json; do
+              [[ -f "$source_directory/$required_file" && ! -L "$source_directory/$required_file" ]] || {
+                echo "Missing required dbt Docs file: $required_file"
+                exit 1
+              }
+            done
+
+            rm -rf "$destination_directory"
+            mkdir -p "$destination_directory"
+            for required_file in index.html manifest.json catalog.json; do
+              cp "$source_directory/$required_file" "$destination_directory/$required_file"
+            done
+            for optional_file in run_results.json graph.gpickle sources.json; do
+              if [[ -f "$source_directory/$optional_file" && ! -L "$source_directory/$optional_file" ]]; then
+                cp "$source_directory/$optional_file" "$destination_directory/$optional_file"
+              fi
+            done
+          }
+
+          site_path=""
+
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_run" ]]; then
+            incoming="$RUNNER_TEMP/dbt-docs-artifacts"
+            mkdir -p "$incoming"
+            gh run download "$WORKFLOW_RUN_ID" --repo "$GITHUB_REPOSITORY" --dir "$incoming"
+
+            mapfile -t manifests < <(find "$incoming" -type f -name manifest.json -print)
+            [[ "${#manifests[@]}" -eq 1 ]] || {
+              echo "Expected one manifest.json in workflow artifacts; found ${#manifests[@]}."
+              exit 1
+            }
+            docs_directory="$(dirname "${manifests[0]}")"
+
+            if [[ "$WORKFLOW_NAME" == "dbt-ci" ]]; then
+              pr_number="$(jq -r '.workflow_run.pull_requests[0].number // empty' "$GITHUB_EVENT_PATH")"
+              [[ "$pr_number" =~ ^[1-9][0-9]*$ ]] || {
+                echo "Unable to resolve a valid pull request number from the CI run."
+                exit 1
+              }
+
+              pr_state="$(gh api "repos/$GITHUB_REPOSITORY/pulls/$pr_number" --jq '.state')"
+              if [[ "$pr_state" == "open" ]]; then
+                copy_docs "$docs_directory" "$DBT_DOCS_SITE/pr/$pr_number"
+                site_path="pr/$pr_number/"
+              else
+                rm -rf "$DBT_DOCS_SITE/pr/$pr_number"
+                site_path="previews/"
+              fi
+            else
+              production="$RUNNER_TEMP/dbt-docs-production"
+              copy_docs "$docs_directory" "$production"
+              find "$DBT_DOCS_SITE" -maxdepth 1 -type f ! -name '.nojekyll' -delete
+              cp "$production"/* "$DBT_DOCS_SITE/"
+            fi
+          elif [[ "$GITHUB_EVENT_NAME" == "pull_request_target" ]]; then
+            [[ "$CLOSED_PR_NUMBER" =~ ^[1-9][0-9]*$ ]] || {
+              echo "Invalid closed pull request number."
+              exit 1
+            }
+            rm -rf "$DBT_DOCS_SITE/pr/$CLOSED_PR_NUMBER"
+            site_path="previews/"
+          fi
+
+          mkdir -p "$DBT_DOCS_SITE/pr" "$DBT_DOCS_SITE/previews"
+
+          open_prs_file="$RUNNER_TEMP/open-pull-requests.json"
+          gh pr list \
+            --repo "$GITHUB_REPOSITORY" \
+            --base master \
+            --state open \
+            --limit 1000 \
+            --json number,title,author,headRefName,updatedAt,url,isDraft \
+            > "$open_prs_file"
+
+          mapfile -t open_prs < <(jq -r '.[].number' "$open_prs_file")
+          declare -A open_pr_lookup=()
+          for pr_number in "${open_prs[@]}"; do
+            open_pr_lookup["$pr_number"]=1
+          done
+
+          shopt -s nullglob
+          for preview_directory in "$DBT_DOCS_SITE"/pr/*; do
+            preview_number="$(basename "$preview_directory")"
+            if [[ ! "$preview_number" =~ ^[1-9][0-9]*$ || -z "${open_pr_lookup[$preview_number]:-}" ]]; then
+              rm -rf "$preview_directory"
+            fi
+          done
+
+          bash scripts/render_dbt_docs_previews.sh "$DBT_DOCS_SITE" "$open_prs_file"
+
+          if [[ ! -f "$DBT_DOCS_SITE/index.html" ]]; then
+            cp docs/dbt-docs-pages-placeholder.html "$DBT_DOCS_SITE/index.html"
+          fi
+          touch "$DBT_DOCS_SITE/.nojekyll"
+
+          echo "site_path=$site_path" >> "$GITHUB_OUTPUT"
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ${{ runner.temp }}/dbt-docs-site
+          retention-days: 7
+
+      - name: Save compact Pages state
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan pages-publish
+          git rm -rf .
+          cp -a "$DBT_DOCS_SITE"/. .
+          git add -A
+          git commit -m "docs: publish dbt documentation state"
+          git push --force origin HEAD:gh-pages
+
+  deploy:
+    needs: prepare
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}${{ needs.prepare.outputs.site_path }}
+    permissions:
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

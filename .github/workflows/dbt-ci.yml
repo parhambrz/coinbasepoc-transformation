@@ -56,4 +56,9 @@ jobs:
         with:
           name: dbt-ci-artifacts-pr-${{ github.event.pull_request.number }}-${{ github.run_id }}
           retention-days: 14
-          path: target/manifest.json
+          path: |
+            target/manifest.json
+            target/run_results.json
+            target/catalog.json
+            target/index.html
+            target/graph.gpickle

@@ -42,3 +42,14 @@ jobs:
       - run: cp profiles/profiles.template.yml profiles/profiles.yml
       - run: dbt debug --target prod --profiles-dir profiles
       - run: dbt build --target prod --profiles-dir profiles
+      - run: dbt docs generate --target prod --profiles-dir profiles
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dbt-prod-artifacts-${{ github.run_id }}
+          retention-days: 30
+          path: |
+            target/manifest.json
+            target/run_results.json
+            target/catalog.json
+            target/index.html
+            target/graph.gpickle
