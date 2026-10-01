@@ -109,14 +109,14 @@ The publisher stores the assembled site on the `gh-pages` branch and deploys it 
 - Inital dbt model, test, github actions workflows, Snowflake provisioning queries, architecture documentation and dbt docs scaffolding were delegated to the agent (Gemini and Claude models). Consumer dashboard was delegated to the agent (Coco)
 - Reviewing of the proposed layers, data flow, implementation process, clarifying the data contracts and snapshot grain, GA workflow and target system setup and validations, via iterative revisions and requesting for the upgrade/fix of missing capabilities or plan deviations done by me. Azure setup of data ingestion layer was done manually. some dev tools for schema validation were written by agent with manual revisions.
 
-### One thing the agent got wrong, or subtly wrong, and how you caught it
+### One thing the agent got wrong, or subtly wrong, and how you caught it?
 
 - The initial architecture claimed it treated Snowlake file load idempotency for end to end no data loss guarantee. After tracing the full path it was known COPY INTO cannot detect WebSocket events before blob storage (due to start/stop of the ingestion process). So the claim was narrowed down to deduplication of ingested records.
 - The initial GA workflow was implemented incorrectly and incompletely. An unnecessary dbt deps was used and failed. No external packages are used in the dbt setup. So a cleanup was needed to be done. CI/CD Workflows need manual setup and the validation was manually done. dbt docs were not generated and published. After review and cleanup of the workflows, organized doc are hosted on Github pages with multiple channels for production env and single PRs. This was detected by checking the workflow logs. Local tools like act can help with manual debug.
 - The agentic plan implemented incorrect permission for the BI_READER role including lack of specific priviledges to the required dynamic tables. It was fixed after human review over the target system (roles and permission checks)
 - The agentic solution implemented an unnecessary intermediate layer. This was decided to be left for potential future developments.
 
-### Where you would not let an agent work unsupervised on this code, and why
+### Where you would not let an agent work unsupervised on this code, and why?
 
 - I require human review for the jobs done by admin level roles and grants, credentials and production deployment. The reason is mistakes can expose data or interrupt/damage critical infrastructure.
 - I require human validation of the design and implementation steps, e.g. source contracts and financial metrics. Since reasonable looking code can still encode incorrect operational or business assumptions.
