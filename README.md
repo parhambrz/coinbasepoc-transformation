@@ -86,7 +86,7 @@ Add repository secrets `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`, `SNOWFLAKE_PRIVATE
 
 The PR workflow builds and tests in a pull-request-specific schema. The trusted `pull_request_target` cleanup workflow checks out `master` and drops only its validated `PR_<number>` schemas. The production workflow runs from the merged `master` commit. CI and prod use separate Snowflake users/roles or distinct role grants, and credentials must not be available to untrusted fork pull requests.
 
-Snowflake account roles and grants are provisioned separately by an administrator with `snowflake/admin/provision_environments.sql`; ordinary dbt workflows do not receive role-management privileges. The script is rerunnable after replacing its placeholders and grants the BI reader access to current and future production objects.
+Snowflake account roles and grants are provisioned separately by an administrator with `snowflake/admin/provision_environments.sql`; ordinary dbt workflows do not receive role-management privileges. The script is rerunnable after replacing its placeholders.
 
 ### dbt Docs on GitHub Pages
 
@@ -106,22 +106,17 @@ The publisher stores the assembled site on the `gh-pages` branch and deploys it 
 
 ### What you delegated to an agent and what you wrote or rewrote yourself
 
-- I delegated initial dbt model, test, CI/CD, Snowflake provisioning, architecture documentation, and dbt Docs scaffolding to AI coding agents.
-- I reviewed the proposed layers and data flow, clarified the source contract and snapshot grain, and chose not to add an unnecessary intermediate model. The intermediate configuration remains reserved for future reusable logic.
-- I iteratively requested missing capabilities, including complete PR/production workflows, hosted dbt Docs with PR previews, improved role grants, and clearer architecture documentation.
-
-**
-- Inital dbt model, test, github actions workflows, Snowflake provisioning queries, architecture documentation and dbt docs scaffolding were delegated to the agent (Gemini and Claude models)
-- Reviewing of the proposed layers, data flow, implementation process, clarifying the data contracts and snapshot grain in several rounds of revisions done by me.
+- Inital dbt model, test, github actions workflows, Snowflake provisioning queries, architecture documentation and dbt docs scaffolding were delegated to the agent (Gemini and Claude models). Consumer dashboard was delegated to the agent (Coco)
+- Reviewing of the proposed layers, data flow, implementation process, clarifying the data contracts and snapshot grain, GA workflow and target system setup and validations, via iterative revisions and requesting for the upgrade/fix of missing capabilities or plan deviations done by me. Azure setup of data ingestion layer was done manually. some dev tools for schema validation were written by agent with manual revisions.
 
 ### One thing the agent got wrong, or subtly wrong, and how you caught it
 
-- The initial architecture claimed it treated Snowlake file load idepotency for end to end no data loss guarantee. After tracing the full path it was known COPY INTO cannot detect WebSocket events before blob storage (due to start/stop of the ingestion process). So the claim was narrowed down to deduplication of ingested records.
-- The initial GA workflow was implemented incompletely. An unnecessary dbt deps was used and failed. No external packages are used in the dbt setup. So a cleanup was needed to be done. CI/CD Workflows need manual setup and the validation was manually done. dbt docs were not generated and published. After review and cleanup of the workflows, organized doc are hosted on Github pages with multiple channels for production env and single PRs.
+- The initial architecture claimed it treated Snowlake file load idempotency for end to end no data loss guarantee. After tracing the full path it was known COPY INTO cannot detect WebSocket events before blob storage (due to start/stop of the ingestion process). So the claim was narrowed down to deduplication of ingested records.
+- The initial GA workflow was implemented incorrectly and incompletely. An unnecessary dbt deps was used and failed. No external packages are used in the dbt setup. So a cleanup was needed to be done. CI/CD Workflows need manual setup and the validation was manually done. dbt docs were not generated and published. After review and cleanup of the workflows, organized doc are hosted on Github pages with multiple channels for production env and single PRs.
 - The agentic plan implemented incorrect permission for the BI_READER role including lack of specific priviledges to the required dynamic tables. It was fixed after human review over the target system.
 - The agentic solution implemented an unnecessary intermediate layer. This was decided to be left for potential future developments.
 
 ### Where you would not let an agent work unsupervised on this code, and why
 
 - I require human review for the jobs done by admin level roles and grants, credentials and production deployment. The reason is mistakes can expose data or interrupt/damage critical infrastructure.
-- I require human confirmation of the design and implementation steps, e.g. source contracts and financial metrics. Since reasonable looking code can still encode incorrect operational or business assumptions.
+- I require human validation of the design and implementation steps, e.g. source contracts and financial metrics. Since reasonable looking code can still encode incorrect operational or business assumptions.
