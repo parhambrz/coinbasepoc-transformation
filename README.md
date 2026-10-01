@@ -104,7 +104,7 @@ The publisher stores the assembled site on the `gh-pages` branch and deploys it 
 
 ## Working with AI
 
-### What you delegated to an agent and what you wrote or rewrote yourself
+### What you delegated to an agent and what you wrote or rewrote yourself?
 
 - Inital dbt model, test, github actions workflows, Snowflake provisioning queries, architecture documentation and dbt docs scaffolding were delegated to the agent (Gemini and Claude models). Consumer dashboard was delegated to the agent (Coco)
 - Reviewing of the proposed layers, data flow, implementation process, clarifying the data contracts and snapshot grain, GA workflow and target system setup and validations, via iterative revisions and requesting for the upgrade/fix of missing capabilities or plan deviations done by me. Azure setup of data ingestion layer was done manually. some dev tools for schema validation were written by agent with manual revisions.
