@@ -10,11 +10,13 @@ models:
       - name: product_id
         description: Market product identifier.
       - name: bid_price
-        description: Safely parsed best bid price.
+        description: Safely parsed best bid price; may be null when the feed is not healthy.
       - name: ask_price
-        description: Safely parsed best ask price.
+        description: Safely parsed best ask price; may be null when the feed is not healthy.
       - name: spread
-        description: Safely parsed bid-ask spread.
+        description: Safely parsed bid-ask spread; may be null when the feed is not healthy.
+      - name: feed_status
+        description: Ingestion-provided feed health state used to interpret market-value availability.
       - name: source_filename
         description: Azure blob file providing this snapshot.
       - name: loaded_at

@@ -6,6 +6,7 @@ with checked as (
         bid_price,
         ask_price,
         spread,
+        feed_status,
         source_filename,
         loaded_at,
         count(*) over (partition by snapshot_id) as snapshot_id_count
@@ -15,9 +16,11 @@ select snapshot_id
 from checked
 where tick_ts is null
    or product_id is null
-   or bid_price is null
-   or ask_price is null
-   or spread is null
+    or feed_status is null
    or source_filename is null
    or loaded_at is null
    or snapshot_id_count > 1
+    or (
+         feed_status = 'healthy'
+         and (bid_price is null or ask_price is null or spread is null)
+    )
